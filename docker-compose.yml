@@ -1,7 +1,26 @@
 services:
   app:
-    image: d44d/devops-for-developers-project-74 
+    image: d44d/devops-for-developers-project-74 # Твой образ
     build:
       context: .
       dockerfile: Dockerfile.production
+    # Ждем, пока база станет "здоровой"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
     command: make test
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    # Проверка готовности базы
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
